@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model banner {
+  banner_id Int     @id @default(autoincrement())
+  movie_id  Int?
+  image     String? @db.VarChar(255)
+  movies    movies? @relation(fields: [movie_id], references: [movie_id], onDelete: NoAction, onUpdate: NoAction, map: "banner_ibfk_1")
+
+  @@index([movie_id], map: "movie_id")
+}
+
+model bookings {
+  booking_id  Int       @id
+  account     Int?
+  schedule_id Int?
+  seat_id     Int?
+  status      String?   @db.VarChar(10)
+  users       users?    @relation(fields: [account], references: [account], onDelete: NoAction, onUpdate: NoAction, map: "bookings_ibfk_1")
+  schedule    schedule? @relation(fields: [schedule_id], references: [schedule_id], onDelete: NoAction, onUpdate: NoAction, map: "bookings_ibfk_2")
+  seats       seats?    @relation(fields: [seat_id], references: [seat_id], onDelete: NoAction, onUpdate: NoAction, map: "bookings_ibfk_3")
+
+  @@index([account], map: "account")
+  @@index([schedule_id], map: "schedule_id")
+  @@index([seat_id], map: "seat_id")
+}
+
+model brands {
+  brand_id   Int       @id
+  brand_name String?   @db.VarChar(255)
+  logo       String?   @db.VarChar(255)
+  cinemas    cinemas[]
+}
+
+model cinemas {
+  cinema_id   Int        @id
+  cinema_name String?    @db.VarChar(255)
+  address     String?    @db.VarChar(255)
+  brand_id    Int?
+  brands      brands?    @relation(fields: [brand_id], references: [brand_id], onDelete: NoAction, onUpdate: NoAction, map: "cinemas_ibfk_1")
+  theaters    theaters[]
+
+  @@index([brand_id], map: "brand_id")
+}
+
+model movies {
+  movie_id       Int        @id
+  movie_name     String?    @db.VarChar(255)
+  trailer        String?    @db.VarChar(255)
+  image          String?    @db.VarChar(255)
+  description    String?    @db.VarChar(255)
+  premiere_day   DateTime?  @db.Date
+  rating         Int?
+  hot            Boolean?
+  available_now  Boolean?
+  available_soon Boolean?
+  banner         banner[]
+  schedule       schedule[]
+}
+
+model schedule {
+  schedule_id Int        @id
+  theater_id  Int?
+  movie_id    Int?
+  show_time   DateTime?  @db.DateTime(0)
+  ticket_fare Int?
+  bookings    bookings[]
+  theaters    theaters?  @relation(fields: [theater_id], references: [theater_id], onDelete: NoAction, onUpdate: NoAction, map: "schedule_ibfk_1")
+  movies      movies?    @relation(fields: [movie_id], references: [movie_id], onDelete: NoAction, onUpdate: NoAction, map: "schedule_ibfk_2")
+
+  @@index([movie_id], map: "movie_id")
+  @@index([theater_id], map: "theater_id")
+}
+
+model seats {
+  seat_id    Int        @id
+  seat_name  String?    @db.VarChar(10)
+  seat_type  String?    @db.VarChar(10)
+  theater_id Int?
+  bookings   bookings[]
+  theaters   theaters?  @relation(fields: [theater_id], references: [theater_id], onDelete: NoAction, onUpdate: NoAction, map: "seats_ibfk_1")
+
+  @@index([theater_id], map: "theater_id")
+}
+
+model theaters {
+  theater_id   Int        @id
+  theater_name String?    @db.VarChar(255)
+  cinema_id    Int?
+  schedule     schedule[]
+  seats        seats[]
+  cinemas      cinemas?   @relation(fields: [cinema_id], references: [cinema_id], onDelete: NoAction, onUpdate: NoAction, map: "theaters_ibfk_1")
+
+  @@index([cinema_id], map: "cinema_id")
+}
+
+model users {
+  account      Int        @id
+  full_name    String?    @db.VarChar(100)
+  email        String?    @db.VarChar(100)
+  phone_number String?    @db.VarChar(20)
+  password     String?    @db.VarChar(100)
+  user_type    String?    @db.VarChar(20)
+  bookings     bookings[]
+}
